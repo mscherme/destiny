@@ -39,7 +39,7 @@ func New() (*API, error) {
 		client: http.Client{Timeout: 10 * time.Second},
 		cachePath: usr.HomeDir + string(os.PathSeparator) + "bungie" +
 			string(os.PathSeparator) + "cache" + string(os.PathSeparator),
-		postThrottle: time.NewTicker(750 * time.Millisecond),
+		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
 	}, nil
 }
