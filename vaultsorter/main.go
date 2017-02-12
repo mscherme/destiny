@@ -12,9 +12,8 @@ import (
 
 var (
 	listItems      = flag.Bool("list_items_only", true, "set to false to actually sort")
-	vaultSection   = flag.String("vault_section", "Armor", "Armor or Weapon")
+	vaultSection   = flag.String("vault_section", "", "Armor or Weapon")
 	engramsToEnd   = flag.Bool("engrams_to_end", false, "")
-	cookie, xcsrf  string
 	cookieLocation = flag.String("cookie_path", "/home/mscherme/bungie/cookie", "")
 	xcsrfLocation  = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
 	gamertag       = flag.String("gamertag", "mscherme", "")
@@ -39,13 +38,13 @@ func readCookie() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cookie = string(data)
+	b.SetCookie(string(data))
 
 	data, err = ioutil.ReadFile(*xcsrfLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
-	xcsrf = string(data)
+	b.SetXCSRF(string(data))
 }
 
 func listAllItemsInInventory(inv *bungie.Inventory, section string) {
@@ -77,15 +76,13 @@ func listAllItems(account *bungie.Account) {
 
 func main() {
 	flag.Parse()
-	readCookie()
 
 	var err error
 	b, err = bungie.New()
 	if err != nil {
 		log.Fatal(err)
 	}
-	b.SetCookie(cookie)
-	b.SetXCSRF(xcsrf)
+	readCookie()
 	account, err := b.LookupAccount(bungie.XBOX, *gamertag)
 	if err != nil {
 		log.Fatal(err)
@@ -112,20 +109,22 @@ func main() {
 		}
 	}
 
-	for _, hash := range order[*vaultSection] {
-		// Ignore error if the item doesn't exist.
-		moveAllToEnd(storage, itemMap[hash])
-	}
-	for _, i := range inv.Items {
-		info := lookup(i.ItemHash)
-		if *engramsToEnd && strings.Contains(info.ItemName, "Engram") {
-			continue
+	if _, ok := order[*vaultSection]; ok {
+		for _, hash := range order[*vaultSection] {
+			// Ignore error if the item doesn't exist.
+			moveAllToEnd(storage, itemMap[hash])
 		}
-		if bucketTypeHashToSection[info.BucketTypeHash] == *vaultSection &&
-			location(*vaultSection, i.ItemHash) == -1 {
-			err = moveToEnd(storage, i)
-			if err != nil {
-				log.Fatal(err)
+		for _, i := range inv.Items {
+			info := lookup(i.ItemHash)
+			if *engramsToEnd && strings.Contains(info.ItemName, "Engram") {
+				continue
+			}
+			if bucketTypeHashToSection[info.BucketTypeHash] == *vaultSection &&
+				location(*vaultSection, i.ItemHash) == -1 {
+				err = moveToEnd(storage, i)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
