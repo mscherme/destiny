@@ -1,6 +1,7 @@
 package bungie
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -188,7 +189,9 @@ type vaultSummaryJSON struct {
 }
 
 func (b *API) GetVaultContents(account *Account) (*Inventory, error) {
-	// TODO make this require cookie and xcsrf
+	if b.xcsrf == "" || b.cookie == "" {
+		return nil, errors.New("Can't get vault contents without cookie and xcsrf")
+	}
 	url := fmt.Sprintf("%d/MyAccount/Vault/Summary/", account.MembershipType)
 	var x vaultSummaryJSON
 	err := b.get(url, &x, false)

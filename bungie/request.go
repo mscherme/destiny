@@ -24,7 +24,7 @@ const (
 type API struct {
 	client    http.Client
 	cookie    string
-	xcsrf      string
+	xcsrf     string
 	cachePath string
 }
 
@@ -153,9 +153,7 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 	return b.lookup(url, x)
 }
 
-//var throttle = time.Tick(50 * time.Millisecond)
-//var throttle = time.Tick(1 * time.Second)
-var throttle = time.Tick(500 * time.Millisecond)
+var throttle = time.Tick(50 * time.Millisecond)
 
 func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) (io.ReadCloser, error) {
 	<-throttle

@@ -64,7 +64,6 @@ type PostGameCarnageReport struct {
 					UniqueWeaponKillsPrecisionKills Stat `json:"uniqueWeaponKillsPrecisionKills"`
 				} `json:"values"`
 			} `json:"weapons"`
-			// TODO define all values?
 			Values map[string]Stat `json:"values"`
 		} `json:"extended"`
 	} `json:"entries"`

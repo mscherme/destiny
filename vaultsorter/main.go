@@ -14,9 +14,9 @@ var (
 	listItems      = flag.Bool("list_items_only", true, "set to false to actually sort")
 	vaultSection   = flag.String("vault_section", "Armor", "Armor or Weapon")
 	engramsToEnd   = flag.Bool("engrams_to_end", false, "")
-	cookie, xcsrf   string
+	cookie, xcsrf  string
 	cookieLocation = flag.String("cookie_path", "/home/mscherme/bungie/cookie", "")
-	xcsrfLocation   = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
+	xcsrfLocation  = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
 	gamertag       = flag.String("gamertag", "mscherme", "")
 
 	b *bungie.API

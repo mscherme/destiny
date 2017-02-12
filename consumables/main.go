@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	cookie, xcsrf   string
+	cookie, xcsrf  string
 	cookieLocation = flag.String("cookie_path", "/home/mscherme/bungie/cookie", "")
-	xcsrfLocation   = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
+	xcsrfLocation  = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
 	gamertag       = flag.String("gamertag", "mscherme", "")
 )
 

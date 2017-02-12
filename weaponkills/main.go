@@ -95,7 +95,7 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 
 func processAccountActivities(account *bungie.Account) {
 	total := 0
-	for _, activityType := range []bungie.ActivityFilter{ /*bungie.None, bungie.AllPvP, */ bungie.AllPvE} {
+	for _, activityType := range []bungie.ActivityFilter{bungie.None, bungie.AllPvP, bungie.AllPvE} {
 		for _, c := range account.Characters {
 			page := 0
 			for {
