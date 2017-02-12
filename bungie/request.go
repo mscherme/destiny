@@ -18,16 +18,16 @@ import (
 const (
 	baseURL      = "https://www.bungie.net/Platform/Destiny/"
 	apiKeyHeader = "X-API-Key"
-	apiKey       = "c99b7e8a2ba04301ab9d40ae66ed0e43"
+	apiKey       = "TODO"
 )
 
 type API struct {
-	client    http.Client
-	cookie    string
-	xcsrf     string
-	cachePath string
+	client       http.Client
+	cookie       string
+	xcsrf        string
+	cachePath    string
 	getThrottle  *time.Ticker
-	postThrottle  *time.Ticker
+	postThrottle *time.Ticker
 }
 
 func New() (*API, error) {
@@ -40,7 +40,7 @@ func New() (*API, error) {
 		cachePath: usr.HomeDir + string(os.PathSeparator) + "bungie" +
 			string(os.PathSeparator) + "cache" + string(os.PathSeparator),
 		postThrottle: time.NewTicker(750 * time.Millisecond),
-		getThrottle: time.NewTicker(50 * time.Millisecond),
+		getThrottle:  time.NewTicker(50 * time.Millisecond),
 	}, nil
 }
 
