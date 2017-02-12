@@ -18,7 +18,7 @@ import (
 const (
 	baseURL      = "https://www.bungie.net/Platform/Destiny/"
 	apiKeyHeader = "X-API-Key"
-	apiKey       = "TODO insert API key"
+	apiKey       = "TODO"
 )
 
 type API struct {
@@ -26,7 +26,8 @@ type API struct {
 	cookie    string
 	xcsrf     string
 	cachePath string
-	throttle  *time.Ticker
+	getThrottle  *time.Ticker
+	postThrottle  *time.Ticker
 }
 
 func New() (*API, error) {
@@ -34,20 +35,13 @@ func New() (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	result :=&API{
+	return &API{
 		client: http.Client{Timeout: 10 * time.Second},
 		cachePath: usr.HomeDir + string(os.PathSeparator) + "bungie" +
 			string(os.PathSeparator) + "cache" + string(os.PathSeparator),
-	}
-	result.SetThrottle(50 * time.Millisecond)
-	return result, nil
-}
-
-func (b *API) SetThrottle(t time.Duration) {
-	if b.throttle != nil {
-		b.throttle.Stop()
-	}
-	b.throttle = time.NewTicker(t)
+		postThrottle: time.NewTicker(750 * time.Millisecond),
+		getThrottle: time.NewTicker(50 * time.Millisecond),
+	}, nil
 }
 
 func (b *API) SetCookie(cookie string) {
@@ -164,7 +158,14 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 }
 
 func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) (io.ReadCloser, error) {
-	<-b.throttle.C
+	switch httpVerb {
+	case "GET":
+		<-b.getThrottle.C
+	case "POST":
+		<-b.postThrottle.C
+	default:
+		return nil, errors.New("Unrecognized HTTP verb")
+	}
 	req, err := http.NewRequest(httpVerb, baseURL+url, body)
 	log.Printf("Bungie API: %s %s%s\n", httpVerb, baseURL, url)
 	if err != nil {

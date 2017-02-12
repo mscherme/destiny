@@ -144,8 +144,8 @@ func (b *API) ManifestInventoryItem(rID int64) (*InventoryItem, error) {
 	return x.Response.Data.InventoryItem, nil
 }
 
-func (b *API) ManifestActivity(rID string) (*Activity, error) {
-	url := fmt.Sprintf("Manifest/Activity/%s/", rID)
+func (b *API) ManifestActivity(rID int64) (*Activity, error) {
+	url := fmt.Sprintf("Manifest/Activity/%d/", rID)
 	var x manifestJSON
 	err := b.get(url, &x, true)
 	if err != nil {
