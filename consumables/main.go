@@ -117,6 +117,9 @@ func balanceConsumables(b *bungie.API, account *bungie.Account) {
 			log.Fatal(err)
 		}
 		targets := map[int64]int64{}
+		for k, v := range targetSizes {
+			targets[k] = v
+		}
 		sizes := map[int64]int64{}
 		for _, i := range inventory.Items {
 			if ignore[i.ItemHash] || i.ItemID != "0" {
