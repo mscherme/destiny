@@ -24,7 +24,7 @@ const (
 type API struct {
 	client    http.Client
 	cookie    string
-	csrf      string
+	xcsrf      string
 	cachePath string
 }
 
@@ -44,8 +44,8 @@ func (b *API) SetCookie(cookie string) {
 	b.cookie = cookie
 }
 
-func (b *API) SetCSRF(csrf string) {
-	b.csrf = csrf
+func (b *API) SetXCSRF(xcsrf string) {
+	b.xcsrf = xcsrf
 }
 
 type jsonStatusFields struct {
@@ -113,8 +113,8 @@ type postResponse struct {
 }
 
 func (b *API) post(url string, body interface{}) error {
-	if b.cookie == "" || b.csrf == "" {
-		return errors.New("Cannot post without cookie and csrf")
+	if b.cookie == "" || b.xcsrf == "" {
+		return errors.New("Cannot post without cookie and xcsrf")
 	}
 	jsonBytes, err := json.MarshalIndent(body, "", "  ")
 	if err != nil {
@@ -165,9 +165,9 @@ func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) 
 		return nil, err
 	}
 	req.Header.Set(apiKeyHeader, apiKey)
-	if b.cookie != "" && b.csrf != "" {
+	if b.cookie != "" && b.xcsrf != "" {
 		req.Header.Set("Cookie", b.cookie)
-		req.Header.Set("x-csrf", b.csrf)
+		req.Header.Set("x-csrf", b.xcsrf)
 	}
 	resp, err := b.client.Do(req)
 	if err != nil {

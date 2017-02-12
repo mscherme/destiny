@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	cookie, csrf   string
+	cookie, xcsrf   string
 	cookieLocation = flag.String("cookie_path", "/home/mscherme/bungie/cookie", "")
-	csrfLocation   = flag.String("csrf_path", "/home/mscherme/bungie/csrf", "")
+	xcsrfLocation   = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
 	gamertag       = flag.String("gamertag", "mscherme", "")
 )
 
@@ -23,11 +23,11 @@ func readCookie() {
 	}
 	cookie = string(data)
 
-	data, err = ioutil.ReadFile(*csrfLocation)
+	data, err = ioutil.ReadFile(*xcsrfLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
-	csrf = string(data)
+	xcsrf = string(data)
 }
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 	b.SetCookie(cookie)
-	b.SetCSRF(csrf)
+	b.SetXCSRF(xcsrf)
 	account, err := b.LookupAccount(bungie.XBOX, *gamertag)
 	if err != nil {
 		log.Fatal(err)
