@@ -18,7 +18,7 @@ import (
 const (
 	baseURL      = "https://www.bungie.net/Platform/Destiny/"
 	apiKeyHeader = "X-API-Key"
-	apiKey       = "7a1778148fa4464cab117143cb83f59c"
+	apiKey       = "TODO insert API key"
 )
 
 type API struct {
