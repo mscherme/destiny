@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"destiny/bungie"
 )
@@ -41,6 +42,7 @@ func main() {
 	}
 	b.SetCookie(cookie)
 	b.SetXCSRF(xcsrf)
+	b.SetThrottle(500 * time.Millisecond)
 	account, err := b.LookupAccount(bungie.XBOX, *gamertag)
 	if err != nil {
 		log.Fatal(err)

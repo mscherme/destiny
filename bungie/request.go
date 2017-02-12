@@ -26,6 +26,7 @@ type API struct {
 	cookie    string
 	xcsrf     string
 	cachePath string
+	throttle  *time.Ticker
 }
 
 func New() (*API, error) {
@@ -33,11 +34,20 @@ func New() (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{
+	result :=&API{
 		client: http.Client{Timeout: 10 * time.Second},
 		cachePath: usr.HomeDir + string(os.PathSeparator) + "bungie" +
 			string(os.PathSeparator) + "cache" + string(os.PathSeparator),
-	}, nil
+	}
+	result.SetThrottle(50 * time.Millisecond)
+	return result, nil
+}
+
+func (b *API) SetThrottle(t time.Duration) {
+	if b.throttle != nil {
+		b.throttle.Stop()
+	}
+	b.throttle = time.NewTicker(t)
 }
 
 func (b *API) SetCookie(cookie string) {
@@ -153,10 +163,8 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 	return b.lookup(url, x)
 }
 
-var throttle = time.Tick(50 * time.Millisecond)
-
 func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) (io.ReadCloser, error) {
-	<-throttle
+	<-b.throttle.C
 	req, err := http.NewRequest(httpVerb, baseURL+url, body)
 	log.Printf("Bungie API: %s %s%s\n", httpVerb, baseURL, url)
 	if err != nil {
