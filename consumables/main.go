@@ -1,5 +1,12 @@
 package main
 
+// This is a tool that organizes consumables.
+// It makes sure that each character has:
+// - 50 of each synth type,
+// - 200 of each resource type
+// - 50 motes of light
+// - 50 SIVA Key Fragments
+
 import (
 	"flag"
 	"fmt"

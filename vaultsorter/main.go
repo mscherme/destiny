@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"strings"
+	"sort"
 
 	"destiny/bungie"
+	"destiny/gear"
 )
 
 var (
-	listItems      = flag.Bool("list_items_only", true, "set to false to actually sort")
-	vaultSection   = flag.String("vault_section", "", "Armor or Weapon")
-	engramsToEnd   = flag.Bool("engrams_to_end", false, "")
+	listItemsOnly  = flag.Bool("list_items_only", true, "set to false to actually sort")
+	vaultSection   = flag.String("vault", "Weapon", "Armor, Weapon or Both")
 	cookieLocation = flag.String("cookie_path", "/home/mscherme/bungie/cookie", "")
 	xcsrfLocation  = flag.String("xcsrf_path", "/home/mscherme/bungie/xcsrf", "")
 	gamertag       = flag.String("gamertag", "mscherme", "")
@@ -47,33 +47,6 @@ func readCookie() {
 	b.SetXCSRF(string(data))
 }
 
-func listAllItemsInInventory(inv *bungie.Inventory, section string) {
-	for _, i := range inv.Items {
-		if i.ItemID == "0" {
-			continue
-		}
-		info := lookup(i.ItemHash)
-		if *listItems && section == bucketTypeHashToSection[info.BucketTypeHash] {
-			fmt.Printf("%d, // %s\n", i.ItemHash, info.ItemName)
-		}
-	}
-}
-
-func listAllItems(account *bungie.Account) {
-	for _, section := range []string{"Armor", "Weapon"} {
-		fmt.Println(section)
-		listAllItemsInInventory(account.Inventory, section)
-		for _, c := range account.Characters {
-			inv, err := b.CharacterInventory(c)
-			if err != nil {
-				log.Fatal(err)
-			}
-			listAllItemsInInventory(inv, section)
-		}
-		fmt.Println()
-	}
-}
-
 func main() {
 	flag.Parse()
 
@@ -88,66 +61,32 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if *listItems {
-		listAllItems(account)
-		return
-	}
-
 	storage := account.Characters[0]
 
-	inv := account.Inventory
-	var itemMap = map[int64][]*bungie.Item{}
-	for _, i := range inv.Items {
-		itemMap[i.ItemHash] = append(itemMap[i.ItemHash], i)
-		if i.ItemID == "0" {
+	inv := account.Inventory.Items
+	sort.Sort(sortableItemList(inv))
+	for _, i := range inv {
+		info := lookup(i.ItemHash)
+		if i.ItemID == "0" || info.ItemTypeName == "Book" {
 			continue
 		}
-		info := lookup(i.ItemHash)
 		section := bucketTypeHashToSection[info.BucketTypeHash]
-		if *listItems && section == *vaultSection {
-			fmt.Printf("%d, // %s\n", i.ItemHash, info.ItemName)
+		if section == "" {
+			continue
 		}
-	}
 
-	if _, ok := order[*vaultSection]; ok {
-		for _, hash := range order[*vaultSection] {
-			// Ignore error if the item doesn't exist.
-			moveAllToEnd(storage, itemMap[hash])
-		}
-		for _, i := range inv.Items {
-			info := lookup(i.ItemHash)
-			if *engramsToEnd && strings.Contains(info.ItemName, "Engram") {
-				continue
+		if section == *vaultSection || *vaultSection == "Both" {
+			fmt.Print(info.ItemName)
+			if s := gear.SetForItem(info); s != 0 {
+				fmt.Printf(" (%s)", s)
 			}
-			if bucketTypeHashToSection[info.BucketTypeHash] == *vaultSection &&
-				location(*vaultSection, i.ItemHash) == -1 {
-				err = moveToEnd(storage, i)
-				if err != nil {
-					log.Fatal(err)
-				}
+			fmt.Println()
+
+			if !*listItemsOnly {
+				moveToEnd(storage, i)
 			}
 		}
 	}
-	if *engramsToEnd {
-		for _, i := range inv.Items {
-			info := lookup(i.ItemHash)
-			if strings.Contains(info.ItemName, "Engram") {
-				err := moveToEnd(storage, i)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
-	}
-}
-func moveAllToEnd(c *bungie.Character, items []*bungie.Item) error {
-	for _, i := range items {
-		err := moveToEnd(c, i)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func moveToEnd(c *bungie.Character, i *bungie.Item) error {
@@ -158,19 +97,16 @@ func moveToEnd(c *bungie.Character, i *bungie.Item) error {
 	return b.TransferItem(c, i, true)
 }
 
-func location(t string, hash int64) int {
-	for i, x := range order[t] {
-		if x == hash {
-			return i
-		}
-	}
-	return -1
-}
+var itemInfoCache = map[int64]*bungie.InventoryItem{}
 
-func lookup(itemHash int64) *bungie.InventoryItem {
-	i, err := b.ManifestInventoryItem(itemHash)
+func lookup(i int64) *bungie.InventoryItem {
+	if info := itemInfoCache[i]; info != nil {
+		return info
+	}
+	info, err := b.ManifestInventoryItem(i)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return i
+	itemInfoCache[i] = info
+	return info
 }
