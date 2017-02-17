@@ -42,13 +42,14 @@ var gearSetOrder = map[gear.Set]int{
 	gear.PrisonOfElders: 3,
 
 	gear.KingsFall:         4,
-	gear.ChallengeOfElders: 5,
+	gear.IronBannerY2:      5,
+	gear.ChallengeOfElders: 6,
 
-	gear.WrathOfTheMachine:    6,
-	gear.RiseOfIronRecordBook: 7,
+	gear.WrathOfTheMachine:    7,
+	gear.RiseOfIronRecordBook: 8,
 
-	gear.TrialsOfOsiris: 8,
-	gear.IronBanner:     9,
+	gear.TrialsOfOsirisY3: 9,
+	gear.IronBannerY3:     10,
 }
 
 type sortableItemList []*bungie.Item
