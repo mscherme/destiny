@@ -83,7 +83,10 @@ func main() {
 			fmt.Println()
 
 			if !*listItemsOnly {
-				moveToEnd(storage, i)
+				err = moveToEnd(storage, i)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
