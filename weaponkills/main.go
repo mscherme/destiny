@@ -58,8 +58,7 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 	for _, activity := range activities {
 		pgcr, err := b.LookupPostGameCarnageReport(activity)
 		if err != nil {
-			log.Printf("Failed to lookup game: %s, %s", activity.ActivityDetails.InstanceID, err)
-			continue
+			log.Fatal(err)
 		}
 		for _, entry := range pgcr.Entries {
 			if entry.Player.DestinyUserInfo.DisplayName != *gamertag {
@@ -95,7 +94,6 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 }
 
 func processAccountActivities(account *bungie.Account) {
-	total := 0
 	for _, activityType := range []bungie.ActivityFilter{bungie.None, bungie.AllPvP, bungie.AllPvE} {
 		for _, c := range account.Characters {
 			page := 0
@@ -113,7 +111,6 @@ func processAccountActivities(account *bungie.Account) {
 				if len(activities) > 0 {
 					processActivities(activities, activityTypeString)
 				}
-				total += len(activities)
 
 				if len(activities) < 100 {
 					break
