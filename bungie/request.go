@@ -24,9 +24,9 @@ const (
 	maxMemCacheSize = 20000
 )
 
-type memCache map[string]interface{}
+type localCache map[string]interface{}
 
-func (c memCache) insert(key string, value interface{}) {
+func (c localCache) insert(key string, value interface{}) {
 	if len(c) >= maxMemCacheSize {
 		for k := range c {
 			delete(c, k)
@@ -43,7 +43,7 @@ type API struct {
 	cookie       string
 	xcsrf        string
 	cachePath    string
-	memCache     memCache
+	localCache     localCache
 	getThrottle  *time.Ticker
 	postThrottle *time.Ticker
 }
@@ -60,7 +60,7 @@ func New() (*API, error) {
 			string(os.PathSeparator),
 		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
-		memCache:     memCache{},
+		localCache:     localCache{},
 	}, nil
 }
 
@@ -103,7 +103,7 @@ func hash(url string) string {
 func (b *API) lookup(url string, x jsonResponse) error {
 	h := hash(url)
 
-	if v, ok := b.memCache[h]; ok {
+	if v, ok := b.localCache[h]; ok {
 		xValue := reflect.ValueOf(x)
 		reflect.Indirect(xValue).Set(
 			reflect.Indirect(reflect.ValueOf(v)))
@@ -122,7 +122,7 @@ func (b *API) lookup(url string, x jsonResponse) error {
 	defer gzipReader.Close()
 	err = fillFromReader(x, gzipReader)
 	if err == nil {
-		b.memCache.insert(h, x)
+		b.localCache.insert(h, x)
 	}
 	return err
 }
@@ -143,7 +143,7 @@ func (b *API) insert(url string, reader io.Reader, x jsonResponse) error {
 	writer.Write(bytes)
 	err = fillFromBytes(x, bytes)
 	if err == nil {
-		b.memCache.insert(h, x)
+		b.localCache.insert(h, x)
 	}
 	return err
 }
