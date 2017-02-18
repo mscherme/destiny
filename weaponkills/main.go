@@ -71,8 +71,9 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 				if item == nil {
 					item, err = b.ManifestInventoryItem(weapon.ReferenceID)
 					if err != nil {
-						knownWeapons[weapon.ReferenceID] = item
+						log.Fatal(err)
 					}
+					knownWeapons[weapon.ReferenceID] = item
 				}
 				if item != nil {
 					rID = item.ItemName
