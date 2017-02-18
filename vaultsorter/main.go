@@ -97,16 +97,10 @@ func moveToEnd(c *bungie.Character, i *bungie.Item) error {
 	return b.TransferItem(c, i, true)
 }
 
-var itemInfoCache = map[int64]*bungie.InventoryItem{}
-
 func lookup(i int64) *bungie.InventoryItem {
-	if info := itemInfoCache[i]; info != nil {
-		return info
-	}
 	info, err := b.ManifestInventoryItem(i)
 	if err != nil {
 		log.Fatal(err)
 	}
-	itemInfoCache[i] = info
 	return info
 }

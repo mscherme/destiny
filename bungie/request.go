@@ -18,17 +18,32 @@ import (
 )
 
 const (
-	baseURL      = "https://www.bungie.net/Platform/Destiny/"
-	apiKeyHeader = "X-API-Key"
-	apiKey       = "TODO"
+	baseURL         = "https://www.bungie.net/Platform/Destiny/"
+	apiKeyHeader    = "X-API-Key"
+	apiKey          = "TODO"
+	maxMemCacheSize = 20000
 )
+
+type memCache map[string]interface{}
+
+func (c memCache) insert(key string, value interface{}) {
+	if len(c) >= maxMemCacheSize {
+		for k := range c {
+			delete(c, k)
+			if len(c) < maxMemCacheSize {
+				break
+			}
+		}
+	}
+	c[key] = value
+}
 
 type API struct {
 	client       http.Client
 	cookie       string
 	xcsrf        string
 	cachePath    string
-	memCache     map[string]interface{}
+	memCache     memCache
 	getThrottle  *time.Ticker
 	postThrottle *time.Ticker
 }
@@ -45,6 +60,7 @@ func New() (*API, error) {
 			string(os.PathSeparator),
 		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
+		memCache:     memCache{},
 	}, nil
 }
 
@@ -89,7 +105,8 @@ func (b *API) lookup(url string, x jsonResponse) error {
 
 	if v, ok := b.memCache[h]; ok {
 		xValue := reflect.ValueOf(x)
-		reflect.Indirect(xValue).Set(reflect.ValueOf(v))
+		reflect.Indirect(xValue).Set(
+			reflect.Indirect(reflect.ValueOf(v)))
 		return nil
 	}
 
@@ -103,7 +120,11 @@ func (b *API) lookup(url string, x jsonResponse) error {
 		return err
 	}
 	defer gzipReader.Close()
-	return fillFromReader(x, gzipReader)
+	err = fillFromReader(x, gzipReader)
+	if err == nil {
+		b.memCache.insert(h, x)
+	}
+	return err
 }
 
 func (b *API) insert(url string, reader io.Reader, x jsonResponse) error {
@@ -120,16 +141,16 @@ func (b *API) insert(url string, reader io.Reader, x jsonResponse) error {
 		return err
 	}
 	writer.Write(bytes)
-	return fillFromBytes(x, bytes)
+	err = fillFromBytes(x, bytes)
+	if err == nil {
+		b.memCache.insert(h, x)
+	}
+	return err
 }
 
 func fillFromBytes(x jsonResponse, b []byte) error {
 	buffer := bytes.NewBuffer(b)
-	err := json.NewDecoder(buffer).Decode(x)
-	if err != nil {
-		return err
-	}
-	return x.checkStatus()
+	return fillFromReader(x, buffer)
 }
 
 func fillFromReader(x jsonResponse, reader io.Reader) error {
@@ -153,7 +174,8 @@ func (b *API) post(url string, body interface{}) error {
 	if err != nil {
 		return err
 	}
-	readCloser, err := b.actuallyIssueRequest("POST", url, bytes.NewReader(jsonBytes))
+	readCloser, err := b.actuallyIssueRequest("POST", url,
+		bytes.NewReader(jsonBytes))
 	if err != nil {
 		return err
 	}
@@ -182,7 +204,8 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 	return b.insert(url, readCloser, x)
 }
 
-func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) (io.ReadCloser, error) {
+func (b *API) actuallyIssueRequest(httpVerb string, url string,
+	body io.Reader) (io.ReadCloser, error) {
 	switch httpVerb {
 	case "GET":
 		<-b.getThrottle.C

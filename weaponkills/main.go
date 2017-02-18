@@ -48,11 +48,7 @@ func addKills(k key, kills, precision int64) {
 	v.precision += precision
 }
 
-var (
-	unknownWeapons = map[int64]bool{}
-	knownWeapons   = map[int64]*bungie.InventoryItem{}
-	b              *bungie.API
-)
+var b *bungie.API
 
 func processActivities(activities []*bungie.ActivityRecord, activityTypeString string) {
 	for _, activity := range activities {
@@ -65,26 +61,14 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 				continue
 			}
 			for _, weapon := range entry.Extended.Weapons {
-				rID := fmt.Sprint(weapon.ReferenceID)
-				item := knownWeapons[weapon.ReferenceID]
-				if item == nil {
-					item, err = b.ManifestInventoryItem(weapon.ReferenceID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					knownWeapons[weapon.ReferenceID] = item
+				item, err := b.ManifestInventoryItem(weapon.ReferenceID)
+				if err != nil {
+					log.Fatal(err)
 				}
-				if item != nil {
-					rID = item.ItemName
-				} else {
-					if !unknownWeapons[weapon.ReferenceID] {
-						log.Printf("Unknown weapon: %s\n", rID)
-						unknownWeapons[weapon.ReferenceID] = true
-					}
-				}
+
 				killCount := int64(weapon.Values.UniqueWeaponKills.Basic.Value)
 				pKillCount := int64(weapon.Values.UniqueWeaponPrecisionKills.Basic.Value)
-				k := key{entry.Player.CharacterClass, rID, activityTypeString}
+				k := key{entry.Player.CharacterClass, item.ItemName, activityTypeString}
 				addKills(k, killCount, pKillCount)
 				k.class = "All"
 				addKills(k, killCount, pKillCount)
