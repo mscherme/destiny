@@ -1,8 +1,8 @@
 package bungie
 
 import (
-	"bufio"
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +38,8 @@ func New() (*API, error) {
 	return &API{
 		client: http.Client{Timeout: 10 * time.Second},
 		cachePath: usr.HomeDir + string(os.PathSeparator) + "bungie" +
-			string(os.PathSeparator) + "cache" + string(os.PathSeparator),
+			string(os.PathSeparator) + "cache" +
+			string(os.PathSeparator),
 		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
 	}, nil
@@ -87,7 +88,12 @@ func (b *API) lookup(url string, x jsonResponse) error {
 		return err
 	}
 	defer f.Close()
-	return fill(x, bufio.NewReader(f))
+	gzipReader, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+	defer gzipReader.Close()
+	return fill(x, gzipReader)
 }
 
 func (b *API) insert(url string, reader io.Reader) error {
@@ -97,10 +103,17 @@ func (b *API) insert(url string, reader io.Reader) error {
 		return err
 	}
 	defer f.Close()
-	writer := bufio.NewWriter(f)
-	_, err = writer.ReadFrom(reader)
-	writer.Flush()
-	return err
+	writer := gzip.NewWriter(f)
+	defer writer.Close()
+	bytes, n := make([]byte, 100), 0
+	for err == nil {
+		n, err = reader.Read(bytes)
+		writer.Write(bytes[:n])
+	}
+	if err != io.EOF {
+		return err
+	}
+	return nil
 }
 
 func fill(x jsonResponse, reader io.Reader) error {
@@ -154,6 +167,9 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 	if err != nil {
 		return err
 	}
+	// TODO avoid writing and then immediately reading the file.
+	//   1. store bytes locally, then write file and return them
+	//   2. create an in memory cache (LRU?)
 	return b.lookup(url, x)
 }
 
