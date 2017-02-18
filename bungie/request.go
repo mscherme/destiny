@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/user"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -26,6 +28,7 @@ type API struct {
 	cookie       string
 	xcsrf        string
 	cachePath    string
+	memCache     map[string]interface{}
 	getThrottle  *time.Ticker
 	postThrottle *time.Ticker
 }
@@ -83,6 +86,13 @@ func hash(url string) string {
 
 func (b *API) lookup(url string, x jsonResponse) error {
 	h := hash(url)
+
+	if v, ok := b.memCache[h]; ok {
+		xValue := reflect.ValueOf(x)
+		reflect.Indirect(xValue).Set(reflect.ValueOf(v))
+		return nil
+	}
+
 	f, err := os.Open(b.cachePath + h)
 	if err != nil {
 		return err
@@ -93,10 +103,10 @@ func (b *API) lookup(url string, x jsonResponse) error {
 		return err
 	}
 	defer gzipReader.Close()
-	return fill(x, gzipReader)
+	return fillFromReader(x, gzipReader)
 }
 
-func (b *API) insert(url string, reader io.Reader) error {
+func (b *API) insert(url string, reader io.Reader, x jsonResponse) error {
 	h := hash(url)
 	f, err := os.Create(b.cachePath + h)
 	if err != nil {
@@ -105,18 +115,24 @@ func (b *API) insert(url string, reader io.Reader) error {
 	defer f.Close()
 	writer := gzip.NewWriter(f)
 	defer writer.Close()
-	bytes, n := make([]byte, 1024), 0
-	for err == nil {
-		n, err = reader.Read(bytes)
-		writer.Write(bytes[:n])
-	}
-	if err != io.EOF {
+	bytes, err := ioutil.ReadAll(reader)
+	if err != nil {
 		return err
 	}
-	return nil
+	writer.Write(bytes)
+	return fillFromBytes(x, bytes)
 }
 
-func fill(x jsonResponse, reader io.Reader) error {
+func fillFromBytes(x jsonResponse, b []byte) error {
+	buffer := bytes.NewBuffer(b)
+	err := json.NewDecoder(buffer).Decode(x)
+	if err != nil {
+		return err
+	}
+	return x.checkStatus()
+}
+
+func fillFromReader(x jsonResponse, reader io.Reader) error {
 	err := json.NewDecoder(reader).Decode(x)
 	if err != nil {
 		return err
@@ -142,7 +158,7 @@ func (b *API) post(url string, body interface{}) error {
 		return err
 	}
 	defer readCloser.Close()
-	return fill(&postResponse{}, readCloser)
+	return fillFromReader(&postResponse{}, readCloser)
 }
 
 func (b *API) get(url string, x jsonResponse, cache bool) error {
@@ -152,7 +168,7 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 			return err
 		}
 		defer readCloser.Close()
-		return fill(x, readCloser)
+		return fillFromReader(x, readCloser)
 	}
 	err := b.lookup(url, x)
 	if err == nil {
@@ -163,14 +179,7 @@ func (b *API) get(url string, x jsonResponse, cache bool) error {
 		return err
 	}
 	defer readCloser.Close()
-	err = b.insert(url, readCloser)
-	if err != nil {
-		return err
-	}
-	// TODO avoid writing and then immediately reading the file.
-	//   1. store bytes locally, then write file and return them
-	//   2. create an in memory cache (LRU?)
-	return b.lookup(url, x)
+	return b.insert(url, readCloser, x)
 }
 
 func (b *API) actuallyIssueRequest(httpVerb string, url string, body io.Reader) (io.ReadCloser, error) {
