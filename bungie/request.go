@@ -105,7 +105,7 @@ func (b *API) insert(url string, reader io.Reader) error {
 	defer f.Close()
 	writer := gzip.NewWriter(f)
 	defer writer.Close()
-	bytes, n := make([]byte, 100), 0
+	bytes, n := make([]byte, 1024), 0
 	for err == nil {
 		n, err = reader.Read(bytes)
 		writer.Write(bytes[:n])
