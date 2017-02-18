@@ -67,9 +67,6 @@ func main() {
 	sort.Sort(sortableItemList(inv))
 	for _, i := range inv {
 		info := lookup(i.ItemHash)
-		if i.ItemID == "0" || info.ItemTypeName == "Book" {
-			continue
-		}
 		section := bucketTypeHashToSection[info.BucketTypeHash]
 		if section == "" {
 			continue
