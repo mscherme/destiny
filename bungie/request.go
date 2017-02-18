@@ -43,7 +43,7 @@ type API struct {
 	cookie       string
 	xcsrf        string
 	cachePath    string
-	localCache     localCache
+	localCache   localCache
 	getThrottle  *time.Ticker
 	postThrottle *time.Ticker
 }
@@ -60,7 +60,7 @@ func New() (*API, error) {
 			string(os.PathSeparator),
 		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
-		localCache:     localCache{},
+		localCache:   localCache{},
 	}, nil
 }
 
