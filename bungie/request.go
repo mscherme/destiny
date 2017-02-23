@@ -18,19 +18,19 @@ import (
 )
 
 const (
-	baseURL         = "https://www.bungie.net/Platform/Destiny/"
-	apiKeyHeader    = "X-API-Key"
-	apiKey          = "TODO"
-	maxMemCacheSize = 20000
+	baseURL      = "https://www.bungie.net/Platform/Destiny/"
+	apiKeyHeader = "X-API-Key"
+	apiKey       = "TODO"
+	maxCacheSize = 20000
 )
 
-type localCache map[string]interface{}
+type cache map[string]interface{}
 
-func (c localCache) insert(key string, value interface{}) {
-	if len(c) >= maxMemCacheSize {
+func (c cache) insert(key string, value interface{}) {
+	if len(c) >= maxCacheSize {
 		for k := range c {
 			delete(c, k)
-			if len(c) < maxMemCacheSize {
+			if len(c) < maxCacheSize {
 				break
 			}
 		}
@@ -43,7 +43,7 @@ type API struct {
 	cookie       string
 	xcsrf        string
 	cachePath    string
-	localCache   localCache
+	cache        cache
 	getThrottle  *time.Ticker
 	postThrottle *time.Ticker
 }
@@ -60,7 +60,7 @@ func New() (*API, error) {
 			string(os.PathSeparator),
 		postThrottle: time.NewTicker(1 * time.Second),
 		getThrottle:  time.NewTicker(50 * time.Millisecond),
-		localCache:   localCache{},
+		cache:        cache{},
 	}, nil
 }
 
@@ -103,7 +103,7 @@ func hash(url string) string {
 func (b *API) lookup(url string, x jsonResponse) error {
 	h := hash(url)
 
-	if v, ok := b.localCache[h]; ok {
+	if v, ok := b.cache[h]; ok {
 		xValue := reflect.ValueOf(x)
 		reflect.Indirect(xValue).Set(
 			reflect.Indirect(reflect.ValueOf(v)))
@@ -122,7 +122,7 @@ func (b *API) lookup(url string, x jsonResponse) error {
 	defer gzipReader.Close()
 	err = fillFromReader(x, gzipReader)
 	if err == nil {
-		b.localCache.insert(h, x)
+		b.cache.insert(h, x)
 	}
 	return err
 }
@@ -143,7 +143,7 @@ func (b *API) insert(url string, reader io.Reader, x jsonResponse) error {
 	writer.Write(bytes)
 	err = fillFromBytes(x, bytes)
 	if err == nil {
-		b.localCache.insert(h, x)
+		b.cache.insert(h, x)
 	}
 	return err
 }

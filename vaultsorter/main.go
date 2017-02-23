@@ -7,8 +7,8 @@ import (
 	"log"
 	"sort"
 
-	"destiny/bungie"
-	"destiny/gear"
+	"github.com/mscherme/destiny/bungie"
+	"github.com/mscherme/destiny/gear"
 )
 
 var (

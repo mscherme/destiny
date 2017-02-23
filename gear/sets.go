@@ -3,7 +3,7 @@ package gear
 import (
 	"strings"
 
-	"destiny/bungie"
+	"github.com/mscherme/destiny/bungie"
 )
 
 type Set int64
