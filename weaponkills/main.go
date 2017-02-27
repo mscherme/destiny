@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"destiny/bungie"
+	"github.com/mscherme/destiny/bungie"
 )
 
 var gamertag = flag.String("gamertag", "mscherme", "")

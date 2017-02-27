@@ -224,7 +224,13 @@ func (b *API) actuallyIssueRequest(httpVerb string, url string,
 		req.Header.Set("Cookie", b.cookie)
 		req.Header.Set("x-csrf", b.xcsrf)
 	}
-	resp, err := b.client.Do(req)
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		resp, err = b.client.Do(req)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
