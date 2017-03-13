@@ -50,8 +50,16 @@ func addKills(k key, kills, precision int64) {
 
 var b *bungie.API
 
-func processActivities(activities []*bungie.ActivityRecord, activityTypeString string) {
+func processActivities(activities []*bungie.ActivityRecord) {
 	for _, activity := range activities {
+		var activityClass string
+		if bungie.PvPModes[activity.ActivityDetails.Mode] {
+			activityClass = "PvP"
+		} else if bungie.PvEModes[activity.ActivityDetails.Mode] {
+			activityClass = "PvE"
+		} else {
+			continue
+		}
 		pgcr, err := b.LookupPostGameCarnageReport(activity)
 		if err != nil {
 			log.Fatal(err)
@@ -68,39 +76,34 @@ func processActivities(activities []*bungie.ActivityRecord, activityTypeString s
 
 				killCount := int64(weapon.Values.UniqueWeaponKills.Basic.Value)
 				pKillCount := int64(weapon.Values.UniqueWeaponPrecisionKills.Basic.Value)
-				k := key{entry.Player.CharacterClass, item.ItemName, activityTypeString}
-				addKills(k, killCount, pKillCount)
-				k.class = "All"
-				addKills(k, killCount, pKillCount)
+
+				k := key{weapon: item.ItemName}
+				for _, k.activity = range []string{activityClass, "All"} {
+					for _, k.class = range []string{entry.Player.CharacterClass, "All"} {
+						addKills(k, killCount, pKillCount)
+					}
+				}
 			}
 		}
 	}
 }
 
 func processAccountActivities(account *bungie.Account) {
-	for _, activityType := range []bungie.ActivityFilter{bungie.None, bungie.AllPvP, bungie.AllPvE} {
-		for _, c := range account.Characters {
-			page := 0
-			for {
-				activities, err := b.LookupActivities(c, activityType, 100, page)
-				if err != nil {
-					log.Fatal(err)
-				}
-				activityTypeString := "All"
-				if activityType == bungie.AllPvE {
-					activityTypeString = "PvE"
-				} else if activityType == bungie.AllPvP {
-					activityTypeString = "PvP"
-				}
-				if len(activities) > 0 {
-					processActivities(activities, activityTypeString)
-				}
-
-				if len(activities) < 100 {
-					break
-				}
-				page++
+	for _, c := range account.Characters {
+		page := 0
+		for {
+			activities, err := b.LookupActivities(c, bungie.None, 100, page)
+			if err != nil {
+				log.Fatal(err)
 			}
+			if len(activities) > 0 {
+				processActivities(activities)
+			}
+
+			if len(activities) < 100 {
+				break
+			}
+			page++
 		}
 	}
 

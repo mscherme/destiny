@@ -33,5 +33,5 @@ type Values struct {
 }
 
 func (v *Values) Duration() time.Duration {
-        return time.Duration(v.ActivityDurationSeconds.Basic.Value) * time.Second
+	return time.Duration(v.ActivityDurationSeconds.Basic.Value) * time.Second
 }

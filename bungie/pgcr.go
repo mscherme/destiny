@@ -34,7 +34,7 @@ type PostGameCarnageReport struct {
 				DisplayValue string  `json:"displayValue"`
 			} `json:"basic"`
 		} `json:"score"`
-		Player *Player `json:"player"`
+		Player      *Player `json:"player"`
 		CharacterID string  `json:"characterId"`
 		Values      *Values `json:"values"`
 		Extended    struct {
