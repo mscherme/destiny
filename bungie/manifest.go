@@ -6,11 +6,11 @@ type manifestJSON struct {
 	jsonStatusFields
 	Response struct {
 		Data struct {
-			RequestID     int64
-			Activity      *Activity `json:"activity"`
-			InventoryItem *InventoryItem
-		}
-	}
+			RequestID     int64          `json:"requestId"`
+			Activity      *Activity      `json:"activity"`
+			InventoryItem *InventoryItem `json:"inventoryItem"`
+		} `json:"data"`
+	} `json:"Response"`
 }
 
 type InventoryItem struct {

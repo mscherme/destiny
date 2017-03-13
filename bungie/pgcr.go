@@ -5,16 +5,28 @@ import (
 	"time"
 )
 
+type Player struct {
+	DestinyUserInfo struct {
+		IconPath       string `json:"iconPath"`
+		MembershipType int64  `json:"membershipType"`
+		MembershipID   string `json:"membershipId"`
+		DisplayName    string `json:"displayName"`
+	} `json:"destinyUserInfo"`
+	CharacterClass    string `json:"characterClass"`
+	CharacterLevel    int64  `json:"characterLevel"`
+	LightLevel        int64  `json:"lightLevel"`
+	BungieNetUserInfo struct {
+		IconPath       string `json:"iconPath"`
+		MembershipType int64  `json:"membershipType"`
+		MembershipID   string `json:"membershipId"`
+		DisplayName    string `json:"displayName"`
+	} `json:"bungieNetUserInfo"`
+}
+
 type PostGameCarnageReport struct {
-	Period          time.Time `json:"period"`
-	ActivityDetails struct {
-		ReferenceID              int64  `json:"referenceId"`
-		InstanceID               string `json:"instanceId"`
-		Mode                     int64  `json:"mode"`
-		ActivityTypeHashOverride int64  `json:"activityTypeHashOverride"`
-		IsPrivate                bool   `json:"isPrivate"`
-	} `json:"activityDetails"`
-	Entries []struct {
+	Period          time.Time        `json:"period"`
+	ActivityDetails *ActivityDetails `json:"activityDetails"`
+	Entries         []struct {
 		Standing int64 `json:"standing"`
 		Score    struct {
 			Basic struct {
@@ -22,40 +34,10 @@ type PostGameCarnageReport struct {
 				DisplayValue string  `json:"displayValue"`
 			} `json:"basic"`
 		} `json:"score"`
-		Player struct {
-			DestinyUserInfo struct {
-				IconPath       string `json:"iconPath"`
-				MembershipType int64  `json:"membershipType"`
-				MembershipID   string `json:"membershipId"`
-				DisplayName    string `json:"displayName"`
-			} `json:"destinyUserInfo"`
-			CharacterClass    string `json:"characterClass"`
-			CharacterLevel    int64  `json:"characterLevel"`
-			LightLevel        int64  `json:"lightLevel"`
-			BungieNetUserInfo struct {
-				IconPath       string `json:"iconPath"`
-				MembershipType int64  `json:"membershipType"`
-				MembershipID   string `json:"membershipId"`
-				DisplayName    string `json:"displayName"`
-			} `json:"bungieNetUserInfo"`
-		} `json:"player"`
-		CharacterID string `json:"characterId"`
-		Values      struct {
-			Assists                 Stat `json:"assists"`
-			Completed               Stat `json:"completed"`
-			Deaths                  Stat `json:"deaths"`
-			Kills                   Stat `json:"kills"`
-			KillsDeathsRatio        Stat `json:"killsDeathsRatio"`
-			KillsDeathsAssists      Stat `json:"killsDeathsAssists"`
-			Score                   Stat `json:"score"`
-			ActivityDurationSeconds Stat `json:"activityDurationSeconds"`
-			CompletionReason        Stat `json:"completionReason"`
-			FireTeamID              Stat `json:"fireTeamId"`
-			PlayerCount             Stat `json:"playerCount"`
-			TeamScore               Stat `json:"teamScore"`
-			LeaveRemainingSeconds   Stat `json:"leaveRemainingSeconds"`
-		} `json:"values"`
-		Extended struct {
+		Player *Player `json:"player"`
+		CharacterID string  `json:"characterId"`
+		Values      *Values `json:"values"`
+		Extended    struct {
 			Weapons []struct {
 				ReferenceID int64 `json:"referenceId"`
 				Values      struct {

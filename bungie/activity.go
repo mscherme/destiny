@@ -38,6 +38,13 @@ const (
 	PrivateMatchesAll ActivityFilter = "PrivateMatchesAll"
 )
 
+type ActivityID int64
+
+const (
+	WrathOfTheMachineNM ActivityID = 260765522
+	WrathOfTheMachineHM ActivityID = 1387993552
+)
+
 type ActivityDetails struct {
 	ReferenceID              int64  `json:"referenceId"`
 	InstanceID               string `json:"instanceId"`
@@ -49,21 +56,7 @@ type ActivityDetails struct {
 type ActivityRecord struct {
 	Period          time.Time        `json:"period"`
 	ActivityDetails *ActivityDetails `json:"activityDetails"`
-	Values          struct {
-		Assists                 StatWithID `json:"assists"`
-		Deaths                  StatWithID `json:"deaths"`
-		Kills                   StatWithID `json:"kills"`
-		AverageScorePerKill     StatWithID `json:"averageScorePerKill"`
-		AverageScorePerLife     StatWithID `json:"averateScorePerLife"`
-		Completed               StatWithID `json:"completed"`
-		KillsDeathsRatio        StatWithID `json:"killsDeathsRatio"`
-		KillsDeathsAssists      StatWithID `json:"killsDeathsAssists"`
-		ActivityDurationSeconds StatWithID `json:"activityDurationSeconds"`
-		CompletionReason        StatWithID `json:"completionReason"`
-		FireTeamID              StatWithID `json:"fireTeamId"`
-		PlayerCount             StatWithID `json:"playerCount"`
-		LeaveRemainingSeconds   StatWithID `json:"leaveRemainingSeconds"`
-	} `json:"values"`
+	Values          *Values          `json:"values"`
 }
 
 type activityHistoryJSON struct {
