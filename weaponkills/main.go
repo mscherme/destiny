@@ -50,16 +50,8 @@ func addKills(k key, kills, precision int64) {
 
 var b *bungie.API
 
-func processActivities(activities []*bungie.ActivityRecord) {
+func processActivities(activities []*bungie.ActivityRecord, mode bungie.Mode) {
 	for _, activity := range activities {
-		var activityClass string
-		if bungie.PvPModes[activity.ActivityDetails.Mode] {
-			activityClass = "PvP"
-		} else if bungie.PvEModes[activity.ActivityDetails.Mode] {
-			activityClass = "PvE"
-		} else {
-			continue
-		}
 		pgcr, err := b.LookupPostGameCarnageReport(activity)
 		if err != nil {
 			log.Fatal(err)
@@ -78,7 +70,7 @@ func processActivities(activities []*bungie.ActivityRecord) {
 				pKillCount := int64(weapon.Values.UniqueWeaponPrecisionKills.Basic.Value)
 
 				k := key{weapon: item.ItemName}
-				for _, k.activity = range []string{activityClass, "All"} {
+				for _, k.activity = range []string{mode.String(), "All"} {
 					for _, k.class = range []string{entry.Player.CharacterClass, "All"} {
 						addKills(k, killCount, pKillCount)
 					}
@@ -89,21 +81,23 @@ func processActivities(activities []*bungie.ActivityRecord) {
 }
 
 func processAccountActivities(account *bungie.Account) {
-	for _, c := range account.Characters {
-		page := 0
-		for {
-			activities, err := b.LookupActivities(c, bungie.None, 100, page)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if len(activities) > 0 {
-				processActivities(activities)
-			}
+	for _, mode := range []bungie.Mode{bungie.AllPvE, bungie.AllPvP} {
+		for _, c := range account.Characters {
+			page := 0
+			for {
+				activities, err := b.LookupActivities(c, mode, 100, page)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if len(activities) > 0 {
+					processActivities(activities, mode)
+				}
 
-			if len(activities) < 100 {
-				break
+				if len(activities) < 100 {
+					break
+				}
+				page++
 			}
-			page++
 		}
 	}
 

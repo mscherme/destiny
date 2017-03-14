@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/mscherme/destiny/bungie"
-	"github.com/mscherme/destiny/gear"
+	"github.com/mscherme/destiny/bungie/gear"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/mscherme/destiny/bungie"
-	"github.com/mscherme/destiny/gear"
+	"github.com/mscherme/destiny/bungie/gear"
 )
 
 // engram
@@ -82,15 +82,15 @@ func (l sortableItemList) Less(i, j int) bool {
 	iGS := gearSetOrder[gear.SetForItem(iInfo)]
 	jGS := gearSetOrder[gear.SetForItem(jInfo)]
 	if iGS == 0 {
-		iGS = 10
+		iGS = 11
 	}
 	if jGS == 0 {
-		jGS = 10
+		jGS = 11
 	}
 	if iGS != jGS {
 		return iGS < jGS
 	}
-	if iGS == 10 {
+	if iGS == 11 {
 		return strings.Compare(iInfo.ItemName, jInfo.ItemName) < 0
 	}
 
