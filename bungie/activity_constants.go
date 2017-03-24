@@ -1,4 +1,4 @@
-package raid
+package bungie
 
 const (
 	WrathOfTheMachineHeroic int64 = 1387993552

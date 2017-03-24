@@ -124,37 +124,6 @@ func (a Mode) String() string {
 	return "Unknown"
 }
 
-var PvEModes = map[Mode]bool{
-	Arena:               true,
-	ArenaChallenge:      true,
-	ArenaElderChallenge: true,
-	Heroic:              true,
-	Patrol:              true,
-	Raid:                true,
-	Story:               true,
-	Strike:              true,
-}
-
-var PvPModes = map[Mode]bool{
-	Control:          true,
-	Doubles:          true,
-	Elimination:      true,
-	FreeForAll:       true,
-	IronBanner:       true,
-	Lockdown:         true,
-	MayhemClash:      true,
-	MayhemRumble:     true,
-	Rift:             true,
-	SupremacyClash:   true,
-	SupremacyInferno: true,
-	SupremacyMayhem:  true,
-	SupremacyRumble:  true,
-	Team:             true,
-	ThreeVsThree:     true,
-	TrialsOfOsiris:   true,
-	ZoneControl:      true,
-}
-
 type ActivityDetails struct {
 	ReferenceID              int64  `json:"referenceId"`
 	InstanceID               string `json:"instanceId"`
