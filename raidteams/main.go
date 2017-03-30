@@ -87,6 +87,7 @@ var raids = map[int64]bool{
 	bungie.WrathOfTheMachineHeroic: true,
 	bungie.CrotasEndNormal:         false,
 	bungie.CrotasEndHeroic:         true,
+	bungie.CrotasEndAgeOfTriumph:   true,
 	bungie.VaultOfGlassNormal:      false,
 	bungie.VaultOfGlassHeroic:      true,
 	bungie.KingsFallNormal:         false,
@@ -97,6 +98,7 @@ func processActivities(activities []*bungie.ActivityRecord) {
 	for _, activity := range activities {
 		heroic, ok := raids[activity.ActivityDetails.ReferenceID]
 		if !ok {
+			log.Printf("Unknown Raid: %d", activity.ActivityDetails.ReferenceID)
 			continue
 		}
 		if activity.Values.Completed.Basic.Value != 1 {
