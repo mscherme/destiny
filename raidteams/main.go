@@ -42,14 +42,21 @@ func main() {
 		}
 	}
 
-	var l fireteamList
-	for _, e := range fireteam {
-		l = append(l, e)
-	}
-	sort.Sort(sort.Reverse(l))
-	fmt.Println("gamertag,total,heroic,normal")
-	for _, e := range l {
-		fmt.Printf("%q,%d,%d,%d\n", e.gamertag, e.total(), e.heroic, e.normal)
+	for _, raid := range []string{"All", "Vault of Glass", "Crota's End", "King's Fall", "Wrath of the Machine"} {
+		var l fireteamList
+		for _, e := range stats[raid] {
+			l = append(l, e)
+		}
+		sort.Sort(sort.Reverse(l))
+		fmt.Println(raid)
+		fmt.Println("gamertag,total,normal,normal,aot,cm")
+		for i, e := range l {
+			if e.total() < 3 && i >= 20 {
+				break
+			}
+			fmt.Printf("%q,%d,%d,%d,%d,%d\n", e.gamertag, e.total(), e.normal, e.heroic, e.aot, e.cm)
+		}
+		fmt.Println()
 	}
 }
 
@@ -57,12 +64,14 @@ type fireteamList []*fireteamEntry
 
 type fireteamEntry struct {
 	gamertag string
-	heroic   int
 	normal   int
+	heroic   int
+	aot      int
+	cm       int
 }
 
 func (f *fireteamEntry) total() int {
-	return f.heroic + f.normal
+	return f.heroic + f.normal + f.cm + f.aot
 }
 
 func (l fireteamList) Swap(i, j int) {
@@ -77,31 +86,23 @@ func (l fireteamList) Less(i, j int) bool {
 	return l[i].total() < l[j].total()
 }
 
-var (
-	b        *bungie.API
-	fireteam = map[string]*fireteamEntry{}
-)
+type raidFireteamStats map[string]*fireteamEntry
 
-var raids = map[int64]bool{
-	bungie.WrathOfTheMachineNormal:    false,
-	bungie.WrathOfTheMachineHeroic:    true,
-	bungie.CrotasEndNormal:            false,
-	bungie.CrotasEndHeroic:            true,
-	bungie.CrotasEndAgeOfTriumph:      true,
-	bungie.CrotasEndAgeOfTriumphCM:    true,
-	bungie.VaultOfGlassNormal:         false,
-	bungie.VaultOfGlassHeroic:         true,
-	bungie.VaultOfGlassAgeOfTriumphCM: true,
-	bungie.KingsFallNormal:            false,
-	bungie.KingsFallHeroic:            true,
-}
+var (
+	b     *bungie.API
+	stats = map[string]raidFireteamStats{}
+)
 
 func processActivities(activities []*bungie.ActivityRecord) {
 	for _, activity := range activities {
-		heroic, ok := raids[activity.ActivityDetails.ReferenceID]
+		raidDetails, ok := bungie.Raids[activity.ActivityDetails.ReferenceID]
+		raidActivityDetails, err := b.ManifestActivity(activity.ActivityDetails.ReferenceID)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if !ok {
 			log.Printf("Unknown Raid: %d", activity.ActivityDetails.ReferenceID)
-			log.Print(b.ManifestActivity(activity.ActivityDetails.ReferenceID))
+			log.Print(raidActivityDetails)
 			continue
 		}
 		if activity.Values.Completed.Basic.Value != 1 {
@@ -116,15 +117,28 @@ func processActivities(activities []*bungie.ActivityRecord) {
 			if entry.Values.Completed.Basic.Value == 0 {
 				continue
 			}
-			f := fireteam[gamertag]
-			if f == nil {
-				f = &fireteamEntry{gamertag: gamertag}
-				fireteam[gamertag] = f
-			}
-			if heroic {
-				f.heroic++
-			} else {
-				f.normal++
+			for _, raidName := range []string{"All", raidActivityDetails.ActivityName} {
+				fireteam, ok := stats[raidName]
+				if !ok {
+					fireteam = raidFireteamStats{}
+					stats[raidName] = fireteam
+				}
+
+				f := fireteam[gamertag]
+				if f == nil {
+					f = &fireteamEntry{gamertag: gamertag}
+					fireteam[gamertag] = f
+				}
+				switch raidDetails.Difficulty {
+				case bungie.NormalRaid:
+					f.normal++
+				case bungie.HeroicRaid:
+					f.heroic++
+				case bungie.AgeOfTriumph:
+					f.aot++
+				case bungie.AgeOfTriumphCM:
+					f.cm++
+				}
 			}
 		}
 	}
