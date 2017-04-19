@@ -49,7 +49,7 @@ func main() {
 		}
 		sort.Sort(sort.Reverse(l))
 		fmt.Println(raid)
-		fmt.Println("gamertag,total,normal,normal,aot,cm")
+		fmt.Println("gamertag,total,normal,heroic,aot,cm")
 		for i, e := range l {
 			if e.total() < 3 && i >= 20 {
 				break
