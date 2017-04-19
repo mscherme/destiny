@@ -19,7 +19,7 @@ const (
 	WrathOfTheMachineNormal         int64 = 260765522
 	WrathOfTheMachineHeroic         int64 = 1387993552
 	WrathOfTheMachineAgeOfTriumphCM int64 = 3356249023
-	WrathOfTheMachineAgeOfTriumph   int64 = 0
+	WrathOfTheMachineAgeOfTriumph   int64 = 0 //TODO figure out the constant for this raid.
 )
 
 const (
